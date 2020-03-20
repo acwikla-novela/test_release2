@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#	ToDo   git push origin --delete $releaseBranch not working due to refs!!!
+#	ToDo   override release
+#	ToDo   auto-increment version in setup.py
+#	ToDo   pre-release flag
+
 # current Git branch
 branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
@@ -15,11 +20,13 @@ git checkout $masterBranch
 if [ $branch == "master" ]; then
 
 ##  Type version
-	echo "Enter the release version number"
-	read versionNumber
+#	echo "Enter the release version number"
+#	read versionNumber
 ##  Version from meta.yaml
 #eval $(parse_yaml meta.yaml)
 #versionNumber=$package_version
+#  Version from setup.py
+versionNumber=$(python setup.py --version)
 
 	# v1.0.0, v1.7.8, etc..
 	versionLabel=v$versionNumber
@@ -27,7 +34,6 @@ if [ $branch == "master" ]; then
 
   echo "Delete old branch $releaseBranch ....."
 	# delete local&remote release_branch if exist, if not we get error, but that is ok
-  #	ToDo   git push origin --delete $releaseBranch not working!!!
   git branch -d master_release
   git push origin --delete master_release
 
@@ -76,3 +82,4 @@ fi
 
 echo "Click 'Enter' to exit"
 read someKey
+
