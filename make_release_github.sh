@@ -1,19 +1,46 @@
 #!/bin/bash
 
 #	ToDo   git push origin --delete $releaseBranch not working due to refs!!!
-#	ToDo   override release
+#	ToDo   overwrite release
 #	ToDo   auto-increment version in setup.py
 
 read_prerelease() {
   echo "Pre-release? [y/n]: "
-  read prerelease
-  if [ $prerelease == "y" ]; then
-    prerelease="true"
-  elif [ $prerelease == "n" ]; then
-    prerelease="false"
+  read is_prerelease
+  if [ $is_prerelease == "y" ]; then
+    is_prerelease="true"
+  elif [ $is_prerelease == "n" ]; then
+    is_prerelease="false"
   else
     read_prerelease
   fi
+}
+
+read_draft() {
+  echo "Draft? [y/n]: "
+  read is_draft
+  if [ $is_draft == "y" ]; then
+    is_draft="true"
+  elif [ $is_draft == "n" ]; then
+    is_draft="false"
+  else
+    read_draft
+  fi
+}
+
+generate_post_data() {
+cat <<EOF
+{
+
+  "tag_name": "$versionLabel",
+  "target_commitish": "$masterBranch",
+  "name": "$title",
+  "body": "",
+  "draft": $is_draft,
+  "prerelease": $is_prerelease
+
+}
+EOF
 }
 
 branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
@@ -38,6 +65,7 @@ if [ $branch == "master" ]; then
   #	read title
   title=$versionLabel
 
+  read_draft
   read_prerelease
 
   echo "Delete old branch $releaseBranch ....."
@@ -48,40 +76,13 @@ if [ $branch == "master" ]; then
 
   echo "Started releasing $versionLabel for $projectName ....."
 
-  #generate_post_data() {
-  #    cat <<EOF
-  #{
-  #  "tag_name": "$versionLabel",
-  #  "target_commitish": "$branch",
-  #  "name": "$versionLabel",
-  #  "draft": false,
-  #  "prerelease": false,
-  #}
-  #EOF
-  #}
-generate_post_data() {
-cat <<EOF
-{
-
-  "tag_name": "$versionLabel",
-  "target_commitish": "$masterBranch",
-  "name": "$title",
-  "body": "Description of the release",
-  "draft": false,
-  "prerelease": false
-
-}
-EOF
-}
-
   git pull
 
  response=$(curl -o /dev/null -s -w "%{http_code}\n" --data "$(generate_post_data)"  "https://api.github.com/repos/$repoFullName/releases?access_token=$token")
 
-
   #ToDo we can use in elif https://developer.github.com/v3/repos/releases/#edit-a-release
   if [ $response == 201 ]; then
-    echo "$versionLabel is successfully released for $projectName ...."
+    echo "$versionLabel is successfully released for $projectName !"
 
     git commit --allow-empty -m "Creating Branch $releaseBranch"
 
