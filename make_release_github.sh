@@ -4,6 +4,18 @@
 #	ToDo   override release
 #	ToDo   auto-increment version in setup.py
 
+read_prerelease() {
+  echo "Pre-release? [y/n]: "
+  read prerelease
+  if [ $prerelease == "y" ]; then
+    prerelease="true"
+  elif [ $prerelease == "n" ]; then
+    prerelease="false"
+  else
+    read_prerelease
+  fi
+}
+
 branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
 projectName="$(git config --get remote.origin.url | cut -d/ -f5 | cut -d. -f1)"
@@ -19,20 +31,14 @@ git checkout $masterBranch
 # master branch validation
 if [ $branch == "master" ]; then
   versionNumber=$(python setup.py --version)
-	versionLabel=v$versionNumber
-	releaseBranch=master_release
+  versionLabel=v$versionNumber
+  releaseBranch=master_release
 
-#	echo "Type release title: "
-#	read title
+  #	echo "Type release title: "
+  #	read title
   title=$versionLabel
 
-	echo "Pre-release? [y/n]: "
-	read prerelease
-  if [ $prerelease == "y" ]; then
-    prerelease="true"
-  else
-    prerelease="false"
-  fi
+  read_prerelease
 
   echo "Delete old branch $releaseBranch ....."
   git branch -d master_release
@@ -40,30 +46,41 @@ if [ $branch == "master" ]; then
 
   git checkout $masterBranch
 
-	echo "Started releasing $versionLabel for $projectName ....."
+  echo "Started releasing $versionLabel for $projectName ....."
 
-  generate_post_data()
+  #generate_post_data() {
+  #    cat <<EOF
+  #{
+  #  "tag_name": "$versionLabel",
+  #  "target_commitish": "$branch",
+  #  "name": "$versionLabel",
+  #  "draft": false,
+  #  "prerelease": false,
+  #}
+  #EOF
+  #}
+generate_post_data() {
+cat <<EOF
 {
-  cat <<EOF
-{
+
   "tag_name": "$versionLabel",
-  "target_commitish": "$branch",
+  "target_commitish": "$masterBranch",
   "name": "$title",
+  "body": "Description of the release",
   "draft": false,
-  "prerelease": $prerelease,
+  "prerelease": false
+
 }
 EOF
 }
 
-	git pull
+  git pull
 
-#  response=$(curl --data "$(generate_post_data)" "https://api.github.com/repos/$repoFullName/releases?access_token=$token");
-  response=$(curl -o -I -L -s -w "%{http_code}" --data "$(generate_post_data)" "https://api.github.com/repos/$repoFullName/releases?access_token=$token")
+ response=$(curl -o /dev/null -s -w "%{http_code}\n" --data "$(generate_post_data)"  "https://api.github.com/repos/$repoFullName/releases?access_token=$token")
 
-  if [[ $response == 400 || $response == 422 ]]; then
-    echo "Something go wrong, code $response"
-    echo "Check if this release version not exist already"
-  else
+
+  #ToDo we can use in elif https://developer.github.com/v3/repos/releases/#edit-a-release
+  if [ $response == 201 ]; then
     echo "$versionLabel is successfully released for $projectName ...."
 
     git commit --allow-empty -m "Creating Branch $releaseBranch"
@@ -79,13 +96,15 @@ EOF
     git pull
 
     echo "Bye!"
+  else
+    echo "Something go wrong, code $response"
+    echo "Check if this release version not exist already"
   fi
 
 else
-	echo "Please make sure you are on master branch and come back!"
-	echo "Bye!"
+  echo "Please make sure you are on master branch and come back!"
+  echo "Bye!"
 fi
 
 echo "Click 'Enter' to exit"
 read _
-

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='test_release2',
-    version="0.3.003",
+    version="0.4.0366",
     author='Aleksander Cwikla',
     url="https://github.com/acwikla-novela/test_release2",
     packages=find_packages(),
