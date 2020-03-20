@@ -15,10 +15,10 @@ git checkout $masterBranch
 if [ $branch == "master" ]; then
 
 ##  Type version
-#	echo "Enter the release version number"
-#	read versionNumber
+	echo "Enter the release version number"
+	read versionNumber
 #  Version from file
-versionNumber=$(head -n 1 VERSION)
+#versionNumber=$(head -n 1 VERSION)
 
 	# v1.0.0, v1.7.8, etc..
 	versionLabel=v$versionNumber
