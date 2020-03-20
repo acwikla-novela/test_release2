@@ -1,8 +1,6 @@
 package:
   name: test_release2
   version: 0.0.003
-  # ToDo Version from script make_relase_github
-
 
 source:
   path: ../test_release2
@@ -16,6 +14,3 @@ requirements:
     - setuptools
   run:
     - python=3.7.4
-#  script_env:
-#   - VERSION
-#   - CONDA_BLD_PATH

@@ -1,10 +1,14 @@
+import yaml
 from setuptools import setup, find_packages
-# version_file = open('VERSION')
-# version = version_file.read().strip()
+
+
+with open('meta.yaml') as config:
+    config_dict = yaml.load(config, Loader=yaml.FullLoader)
+    version = config_dict['package']['version']
 
 setup(
     name='test_release2',
-    version="0.0.001",
+    version=version,
     author='Aleksander Cwikla',
     url="https://github.com/acwikla-novela/test_release2",
     packages=find_packages(),
