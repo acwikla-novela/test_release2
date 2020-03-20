@@ -5,10 +5,6 @@
 #	ToDo   auto-increment version in setup.py
 #	ToDo   pre-release flag
 
-echo $(python setup.py --version)
-
-echo $(python setup.py --version)
-
 # current Git branch
 branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
