@@ -1,0 +1,22 @@
+package:
+  name: test_release
+  version: {{ environ['VERSION'] }}
+#  version: 0.0.001
+  # ToDo Version from script make_relase_github
+
+
+source:
+  path: ../test_release
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python=3.7.4
+    - setuptools
+  run:
+    - python=3.7.4
+#  script_env:
+#   - VERSION
+#   - CONDA_BLD_PATH
