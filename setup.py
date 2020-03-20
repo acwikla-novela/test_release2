@@ -15,4 +15,5 @@ setup(
     description='Testing auto-release',
     platforms='Posix; MacOS X; Windows',
     python_requires='==3.7.4',
+    install_requires=['yaml']
 )
