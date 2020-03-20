@@ -3,37 +3,38 @@
 #	ToDo   git push origin --delete $releaseBranch not working due to refs!!!
 #	ToDo   override release
 #	ToDo   auto-increment version in setup.py
-#	ToDo   pre-release flag
 
-# current Git branch
 branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
-# current project name
 projectName="$(git config --get remote.origin.url | cut -d/ -f5 | cut -d. -f1)"
+repoFullName=$(git config --get remote.origin.url | sed 's/.*:\/\/github.com\///;s/.git$//')
+
+# Personall access token, set by command: git config --global github.token XXXXXXXXXXXXXXXXX
+token=$(git config --global github.token)
 
 masterBranch=master
 
-# checkout to master branch, this will break if the user has uncommited changes
 git checkout $masterBranch
 
 # master branch validation
 if [ $branch == "master" ]; then
-
-##  Type version
-#	echo "Enter the release version number"
-#	read versionNumber
-##  Version from meta.yaml
-#eval $(parse_yaml meta.yaml)
-#versionNumber=$package_version
-#  Version from setup.py
-versionNumber=$(python setup.py --version)
-
-	# v1.0.0, v1.7.8, etc..
+  versionNumber=$(python setup.py --version)
 	versionLabel=v$versionNumber
 	releaseBranch=master_release
 
+#	echo "Type release title: "
+#	read title
+  title=$versionLabel
+
+	echo "Pre-release? [y/n]: "
+	read prerelease
+  if [ $prerelease == "y" ]; then
+    prerelease="true"
+  else
+    prerelease="false"
+  fi
+
   echo "Delete old branch $releaseBranch ....."
-	# delete local&remote release_branch if exist, if not we get error, but that is ok
   git branch -d master_release
   git push origin --delete master_release
 
@@ -41,39 +42,44 @@ versionNumber=$(python setup.py --version)
 
 	echo "Started releasing $versionLabel for $projectName ....."
 
-	# pull the latest version of the code from master
+  generate_post_data()
+{
+  cat <<EOF
+{
+  "tag_name": "$versionLabel",
+  "target_commitish": "$branch",
+  "name": "$title",
+  "draft": false,
+  "prerelease": $prerelease,
+}
+EOF
+}
+
 	git pull
 
-	# create empty commit from master branch, create release_branch
-	git commit --allow-empty -m "Creating Branch $releaseBranch"
+#  response=$(curl --data "$(generate_post_data)" "https://api.github.com/repos/$repoFullName/releases?access_token=$token");
+  response=$(curl -o -I -L -s -w "%{http_code}" --data "$(generate_post_data)" "https://api.github.com/repos/$repoFullName/releases?access_token=$token")
 
-	# create tag for new version from -master. If tag exist, don`t worry.
-	git tag $versionLabel
+  if [[ $response == 400 || $response == 422 ]]; then
+    echo "Something go wrong, code $response"
+    echo "Check if this release version not exist already"
+  else
+    echo "$versionLabel is successfully released for $projectName ...."
 
-	# push commit to remote origin
-	git push
+    git commit --allow-empty -m "Creating Branch $releaseBranch"
 
-	# push tag to remote origin
-	git push --tags origin
+    git checkout -b $releaseBranch $masterBranch
 
-	# create the release branch from the -master branch
-  git checkout -b $releaseBranch $masterBranch
+    git checkout $masterBranch
 
-	# checkout to master branch
-	git checkout $masterBranch
+    git push -u origin $releaseBranch
 
-  # push local releaseBranch to remote
-	git push -u origin $releaseBranch
+    git checkout $masterBranch
 
-	echo "$versionLabel is successfully released for $projectName ...."
+    git pull
 
-	# checkout to master branch
-	git checkout $masterBranch
-
-	# pull the latest version of the code from master
-	git pull
-
-	echo "Bye!"
+    echo "Bye!"
+  fi
 
 else
 	echo "Please make sure you are on master branch and come back!"
@@ -81,5 +87,5 @@ else
 fi
 
 echo "Click 'Enter' to exit"
-read someKey
+read _
 
