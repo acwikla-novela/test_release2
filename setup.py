@@ -6,7 +6,7 @@ setup(
     name='test_release2',
     version="0.0.001",
     author='Aleksander Cwikla',
-    url="https://github.com/acwikla-novela/test_release",
+    url="https://github.com/acwikla-novela/test_release2",
     packages=find_packages(),
     description='Testing auto-release',
     platforms='Posix; MacOS X; Windows',
