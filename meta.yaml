@@ -1,11 +1,11 @@
 package:
-  name: test_release
+  name: test_release2
   version: 0.0.003
   # ToDo Version from script make_relase_github
 
 
 source:
-  path: ../test_release
+  path: ../test_release2
 
 build:
   number: 0
